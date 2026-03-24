@@ -159,12 +159,18 @@
 
     // Hero banner
     const champ = s.standings[0] || {};
-    const ru    = s.standings[1] || {};
+    const pts   = s.standings.map(r => r.FPts).filter(Boolean);
+    const lgAvg = pts.length ? Math.round(pts.reduce((a, b) => a + b) / pts.length) : null;
     $('season-hero').innerHTML = `
       <div class="season-hero">
         <div class="season-hero-left">
           <div class="hero-year">${year}</div>
           <div class="hero-league">${s.league} League</div>
+        </div>
+        <div class="season-hero-mid">
+          <div class="hero-label">League Avg</div>
+          <div class="hero-team">${lgAvg ? fmtN(lgAvg) : '—'}</div>
+          <div class="hero-pts">pts / team</div>
         </div>
         <div class="season-hero-right">
           <div class="hero-label">🏆 Champion</div>

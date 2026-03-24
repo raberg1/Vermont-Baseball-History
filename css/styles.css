@@ -190,6 +190,7 @@ a { color: var(--blue); }
 }
 .season-hero-left .hero-year  { font-size: 2.4rem; font-weight: 900; color: var(--gold); line-height: 1; }
 .season-hero-left .hero-league { font-size: .8rem; color: rgba(255,255,255,.55); margin-top: 4px; letter-spacing: .04em; text-transform: uppercase; }
+.season-hero-mid { text-align: center; }
 .season-hero-right { text-align: right; }
 .hero-label { font-size: .75rem; color: rgba(255,255,255,.55); text-transform: uppercase; letter-spacing: .08em; }
 .hero-team  { font-size: 1.25rem; font-weight: 700; margin-top: 4px; }
