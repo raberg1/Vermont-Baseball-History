@@ -319,8 +319,8 @@
       const hit  = s.standings.map(r => r.Hit).filter(Boolean);
       const pit  = s.standings.map(r => r.Pit).filter(Boolean);
       const avg  = pts.length  ? pts.reduce((a, b) => a + b) / pts.length  : 0;
-      const aHit = hit.length  ? hit.reduce((a, b) => a + b) / hit.length  : 0;
-      const aPit = pit.length  ? pit.reduce((a, b) => a + b) / pit.length  : 0;
+      const aHit = hit.length  ? hit.reduce((a, b) => a + b) / hit.length  : null;
+      const aPit = pit.length  ? pit.reduce((a, b) => a + b) / pit.length  : null;
       return {
         year:    s.year,
         league:  s.league,
@@ -419,8 +419,8 @@
     const labels = summaries.map(s => s.year);
     const avgPts = summaries.map(s => Math.round(s.avg));
     const champPts = summaries.map(s => s.champPts || null);
-    const avgHit = summaries.map(s => Math.round(s.aHit));
-    const avgPit = summaries.map(s => Math.round(s.aPit));
+    const avgHit = summaries.map(s => s.aHit != null ? Math.round(s.aHit) : null);
+    const avgPit = summaries.map(s => s.aPit != null ? Math.round(s.aPit) : null);
 
     const baseOpts = {
       responsive: true,

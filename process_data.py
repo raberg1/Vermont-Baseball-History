@@ -47,8 +47,13 @@ YEAR_FILES = {
 
 OWNERS_FILE = "League Owners By Year - Sheet1.csv"
 
+# Historical Excel file (pre-Fantrax seasons 2001-2010)
+EXCEL_FILE = "fantasybaseballstats_1999-2021.xlsx"
+
 YEAR_LEAGUE_NAME = {2011: "Montana State", 2012: "Montana State"}
 DEFAULT_LEAGUE_NAME = "Vermont Baseball"
+# NOTE: Update this if you know the league name before 2011
+PRE_FANTRAX_LEAGUE_NAME = "Montana State"
 
 # Fallback: username → display name for owners who marked profile "Private"
 USERNAME_TO_NAME = {
@@ -73,6 +78,21 @@ USERNAME_TO_NAME = {
     "ejohnson523":    "Erik Johnson",
     "csuram89":       "csuram89",
     "elaguamala":     "Daniel Caveney",
+}
+
+# Normalize owner names from the historical Excel spreadsheet
+HISTORICAL_OWNER_NAMES = {
+    "Robb Cramer":          "Robert Cramer Jr",
+    "Bobb Cramer":          "Robert Cramer Jr",
+    "Robert Cramer":        "Robert Cramer Jr",
+    "Rob Berg":             "Robert Berg",
+    "Rob berg":             "Robert Berg",
+    "Dan Caveney":          "Daniel Caveney",
+    "Chris Martinez":       "Christopher Martinez",
+    "Chris martinez":       "Christopher Martinez",
+    "Dean Mitchel":         "Dean Mitchell",   # typo in 2008
+    "Erik berg":            "Erik Berg",
+    "Jim Daley ?":          "Jim Daley",
 }
 
 # Columns parsed as numbers
@@ -293,17 +313,171 @@ def parse_owners(valid_teams_by_year=None):
     return owner_map
 
 
+# ── Historical Excel parser (pre-Fantrax seasons 2001–2010) ──────────────────
+
+def normalize_historical_owner(name):
+    if not name:
+        return None
+    name = name.strip()
+    return HISTORICAL_OWNER_NAMES.get(name, name)
+
+
+def parse_excel_history():
+    """
+    Parse pre-Fantrax season data from the historical Excel spreadsheet.
+    Only processes years not already covered by YEAR_FILES.
+    Returns: (seasons_dict, hist_owners_dict)
+    """
+    try:
+        import openpyxl
+    except ImportError:
+        print("  WARNING: openpyxl not installed — skipping historical Excel data.")
+        print("           Run: pip3 install openpyxl")
+        return {}, {}
+
+    filepath = CSV_DIR / EXCEL_FILE
+    if not filepath.exists():
+        print(f"  WARNING: {EXCEL_FILE} not found — skipping historical data.")
+        return {}, {}
+
+    wb = openpyxl.load_workbook(filepath, read_only=True, data_only=True)
+    seasons = {}
+    hist_owners = {}   # {owner_display_name: {year: team_name}}
+
+    existing_years = set(YEAR_FILES.keys())
+
+    for sheet_name in wb.sheetnames:
+        try:
+            year = int(sheet_name)
+        except ValueError:
+            continue
+
+        # Skip years already covered by Fantrax CSVs, and pre-2001 (no stats)
+        if year in existing_years or year < 2001:
+            continue
+
+        ws = wb[sheet_name]
+        all_rows = [r for r in ws.iter_rows(values_only=True)
+                    if any(v is not None for v in r)]
+        if not all_rows:
+            continue
+
+        standings = []
+
+        if year == 2009:
+            # Double header: row 0 = section labels, row 1 = column names, row 2+ = data
+            # Columns: Rank(0), TEAM(1), Total FP(2), G(3), AB(4),
+            #          Hitters FP(5), FP/G(6), G(7), SPG(8), RPG(9), IP(10),
+            #          Pitchers FP(11), FP/G(12)
+            data_rows = all_rows[2:]
+            for i, row in enumerate(data_rows):
+                team_raw = row[1] if len(row) > 1 else None
+                if not team_raw:
+                    break
+                team = str(team_raw).strip()
+                if not team or "league note" in team.lower():
+                    break
+                rk   = row[0] if isinstance(row[0], (int, float)) else (i + 1)
+                # Rank resetting to 1 means a new table has started — stop
+                if rk == 1 and standings:
+                    break
+                fp   = row[2]
+                hit  = row[5]
+                pit  = row[11] if len(row) > 11 else None
+                if not isinstance(fp, (int, float)):
+                    continue
+                standings.append({
+                    "Rk":   float(rk),
+                    "Team": team,
+                    "FPts": float(fp),
+                    "Hit":  float(hit) if isinstance(hit, (int, float)) else None,
+                    "Pit":  float(pit) if isinstance(pit, (int, float)) else None,
+                })
+            # No owner column in 2009 sheet
+
+        else:
+            # Standard format: row 0 = header, row 1+ = data
+            header = [str(v).lower().strip() if v else "" for v in all_rows[0]]
+
+            def find_col(*names):
+                for name in names:
+                    for i, h in enumerate(header):
+                        if h == name.lower():
+                            return i
+                return None
+
+            team_col  = find_col("team")
+            owner_col = find_col("owner")
+            pts_col   = find_col("total points", "total fp")
+
+            if team_col is None or pts_col is None:
+                continue
+
+            for i, row in enumerate(all_rows[1:]):
+                team_raw = row[team_col] if team_col < len(row) else None
+                if not team_raw:
+                    break
+                team = str(team_raw).strip()
+                if not team or "league note" in team.lower():
+                    break
+
+                fp_raw = row[pts_col] if pts_col < len(row) else None
+                if not isinstance(fp_raw, (int, float)):
+                    continue
+
+                owner_raw = row[owner_col] if (owner_col is not None and owner_col < len(row)) else None
+                owner = normalize_historical_owner(str(owner_raw).strip()) if owner_raw else None
+
+                standings.append({
+                    "Rk":   float(i + 1),
+                    "Team": team,
+                    "FPts": float(fp_raw),
+                    "Hit":  None,
+                    "Pit":  None,
+                })
+
+                if owner and team:
+                    if owner not in hist_owners:
+                        hist_owners[owner] = {}
+                    if year not in hist_owners[owner]:
+                        hist_owners[owner][year] = team
+
+        if standings:
+            league = YEAR_LEAGUE_NAME.get(year, PRE_FANTRAX_LEAGUE_NAME)
+            seasons[year] = {
+                "year":          year,
+                "league":        league,
+                "standings":     standings,
+                "hittingPts":    [],
+                "pitchingPts":   [],
+                "hittingStats":  [],
+                "pitchingStats": [],
+            }
+            print(f"  {year}  (historical — {len(standings)} teams)")
+
+    return seasons, hist_owners
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
     print("Vermont Baseball League — processing CSV data")
     print("=" * 50)
 
+    # Fantrax seasons (2011+)
     all_seasons = {}
     for year, filename in sorted(YEAR_FILES.items()):
         print(f"  {year}  {filename}")
         data = process_year(year, filename)
         if data:
+            all_seasons[year] = data
+
+    # Historical Excel seasons (2001–2010)
+    print()
+    print("  Parsing historical Excel data...")
+    excel_seasons, excel_owners = parse_excel_history()
+    for year, data in excel_seasons.items():
+        if year not in all_seasons:
             all_seasons[year] = data
 
     # Build per-year set of valid team names for owner-data validation
@@ -315,6 +489,14 @@ def main():
     print()
     print("  Parsing owners...")
     owners = parse_owners(valid_teams_by_year)
+
+    # Merge historical owner data (Excel) into owners dict
+    for name, by_year in excel_owners.items():
+        if name not in owners:
+            owners[name] = {}
+        for year, team in by_year.items():
+            if year not in owners[name]:
+                owners[name][year] = team
 
     now = datetime.now().isoformat(timespec="seconds")
     output = (
@@ -332,7 +514,7 @@ def main():
     print(f"  ✓  {OUTPUT_FILE}")
     print(f"  ✓  {len(all_seasons)} seasons  |  {len(owners)} owners")
     print()
-    print("Open baseball-app/index.html in your browser to view the app.")
+    print("Open index.html in your browser to view the app.")
 
 
 if __name__ == "__main__":
