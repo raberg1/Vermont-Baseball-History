@@ -4,12 +4,12 @@ Vermont Baseball League - Fantasy Baseball Data Processor
 
 Run this script to generate/refresh js/data.js from the Fantrax CSV files.
 
-Usage (run from the baseball-app directory):
+Usage (run from the repo root directory):
     python3 process_data.py
 
 When adding a new season:
   1. Download the Fantrax standings CSV for that season
-  2. Place it in the parent folder (same folder as the other CSVs)
+  2. Place it in the data/ folder (same folder as the other CSVs)
   3. Add an entry to YEAR_FILES below
   4. Run this script
   5. Commit and push to GitHub — the site updates automatically
@@ -21,8 +21,8 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-# CSV files live one level up (in the "League Summary" folder)
-CSV_DIR = Path(__file__).parent.parent
+# CSV files live in the data/ subfolder
+CSV_DIR = Path(__file__).parent / "data"
 OUTPUT_FILE = Path(__file__).parent / "js" / "data.js"
 
 # ── Year → CSV filename mapping ──────────────────────────────────────────────
