@@ -344,6 +344,12 @@ def parse_excel_history():
     seasons = {}
     hist_owners = {}   # {owner_display_name: {year: team_name}}
 
+    # Game-count constants derived from 2009 actual data
+    G_HIT = 1620   # hitter player-games per team
+    G_PIT = 302    # pitcher player-games per team (combined)
+    G_SP  = 162    # starter games per team (2001-2002 SP/RP split years)
+    G_RP  = 140    # reliever games per team
+
     existing_years = set(YEAR_FILES.keys())
 
     for sheet_name in wb.sheetnames:
@@ -393,7 +399,28 @@ def parse_excel_history():
                     "Hit":  float(hit) if isinstance(hit, (int, float)) else None,
                     "Pit":  float(pit) if isinstance(pit, (int, float)) else None,
                 })
-            # No owner column in 2009 sheet
+            # No owner column in 2009 sheet — use manually recorded data
+            owners_2009 = {
+                "1899 Cleveland Spiders": "Jason Bemister",
+                "Bozone Bobcats":         "Robert Cramer Jr",
+                "Mehr Bier":              "Robert Berg",
+                "Chicago Loopers":        "Erik Berg",
+                "Elf Needs Food Badly!":  "Jim Daley",
+                "Portland Gnashers":      "Bob Nash",
+                "Jindal's GOP":           "Erik Johnson",
+                "RonnieWOOOS":            "John Vlangos",
+                "MOLINE MAPLE LEAFS":     "Derek Betcher",
+                "Boneheads":              "Chris Fryrear",
+                "Fort Collins Loafers":   "Dean Mitchell",
+                "Berwyn Bashers":         "John Pilon",
+            }
+            for entry in standings:
+                owner = owners_2009.get(entry["Team"])
+                if owner:
+                    if owner not in hist_owners:
+                        hist_owners[owner] = {}
+                    if year not in hist_owners[owner]:
+                        hist_owners[owner][year] = entry["Team"]
 
         else:
             # Standard format: row 0 = header, row 1+ = data
@@ -406,9 +433,13 @@ def parse_excel_history():
                             return i
                 return None
 
-            team_col  = find_col("team")
-            owner_col = find_col("owner")
-            pts_col   = find_col("total points", "total fp")
+            team_col     = find_col("team")
+            owner_col    = find_col("owner")
+            pts_col      = find_col("total points", "total fp")
+            hit_fpg_col  = find_col("hitters fp/g", "hitting fp")
+            pit_fpg_col  = find_col("pitchers fp/g", "pitching fp")
+            sp_fpg_col   = find_col("sp fp/g")
+            rp_fpg_col   = find_col("rp fp/g")
 
             if team_col is None or pts_col is None:
                 continue
@@ -428,12 +459,31 @@ def parse_excel_history():
                 owner_raw = row[owner_col] if (owner_col is not None and owner_col < len(row)) else None
                 owner = normalize_historical_owner(str(owner_raw).strip()) if owner_raw else None
 
+                def get_fpg(col):
+                    if col is None or col >= len(row):
+                        return None
+                    v = row[col]
+                    return v if isinstance(v, (int, float)) else None
+
+                hit_fpg = get_fpg(hit_fpg_col)
+                pit_fpg = get_fpg(pit_fpg_col)
+                sp_fpg  = get_fpg(sp_fpg_col)
+                rp_fpg  = get_fpg(rp_fpg_col)
+
+                hit = round(G_HIT * hit_fpg) if hit_fpg is not None else None
+                if pit_fpg is not None:
+                    pit = round(G_PIT * pit_fpg)
+                elif sp_fpg is not None and rp_fpg is not None:
+                    pit = round(G_SP * sp_fpg + G_RP * rp_fpg)
+                else:
+                    pit = None
+
                 standings.append({
                     "Rk":   float(i + 1),
                     "Team": team,
                     "FPts": float(fp_raw),
-                    "Hit":  None,
-                    "Pit":  None,
+                    "Hit":  float(hit) if hit is not None else None,
+                    "Pit":  float(pit) if pit is not None else None,
                 })
 
                 if owner and team:
