@@ -560,6 +560,29 @@
   function renderOwners() {
     ownerSummaries = buildOwnerSummaries();
 
+    const latestYear = YEARS[YEARS.length - 1];
+    let showCurrentOnly = false;
+
+    function applyToggle() {
+      const visible = showCurrentOnly
+        ? ownerSummaries.filter(o => o.records.some(r => r.year === latestYear))
+        : ownerSummaries;
+      renderOwnerSummaryTable(visible);
+    }
+
+    $('btn-all-owners').onclick = () => {
+      showCurrentOnly = false;
+      $('btn-all-owners').classList.add('active');
+      $('btn-current-owners').classList.remove('active');
+      applyToggle();
+    };
+    $('btn-current-owners').onclick = () => {
+      showCurrentOnly = true;
+      $('btn-current-owners').classList.add('active');
+      $('btn-all-owners').classList.remove('active');
+      applyToggle();
+    };
+
     $('owner-list').innerHTML = ownerSummaries.map(o => `
       <div class="owner-card" data-owner="${encodeURIComponent(o.name)}"
            onclick="app.selectOwner('${encodeURIComponent(o.name)}')">
@@ -574,7 +597,7 @@
       </div>
     `).join('');
 
-    renderOwnerSummaryTable(ownerSummaries);
+    applyToggle();
 
     if (ownerSummaries.length > 0) {
       selectOwner(encodeURIComponent(ownerSummaries[0].name));

@@ -280,6 +280,16 @@ tbody tr:hover td { background: #f8fafc; }
 }
 .span-2 { grid-column: span 2; }
 
+/* ── Owner Toggle ── */
+.owner-toggle { display: flex; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 2px; gap: 2px; }
+.owner-toggle-btn {
+  background: none; border: none; border-radius: 4px; padding: 4px 12px;
+  font-size: .8rem; font-weight: 600; color: var(--text-light); cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.owner-toggle-btn.active { background: var(--blue); color: #fff; }
+.owner-toggle-btn:not(.active):hover { background: var(--border); }
+
 /* ── Owners Layout ── */
 .owners-layout {
   display: grid;
