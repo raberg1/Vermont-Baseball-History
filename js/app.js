@@ -292,6 +292,7 @@
         ru:      s.standings[1]?.Team,
         ruPts:   s.standings[1]?.FPts,
         last:    s.standings[s.standings.length - 1]?.Team,
+        lastPts: s.standings[s.standings.length - 1]?.FPts,
         avg, aHit, aPit,
       };
     });
@@ -356,13 +357,14 @@
         <td>${sm.ru || '—'}</td>
         <td class="r">${fmtN(sm.ruPts)}</td>
         <td>${sm.last || '—'}</td>
+        <td class="r">${fmtN(sm.lastPts)}</td>
       </tr>`;
     }).join('');
 
     $('champions-table').innerHTML = `<table>
       <thead><tr>
         <th>Year</th><th>League</th><th>Champion</th><th>Owner</th>
-        <th class="r">Pts</th><th>Runner-Up</th><th class="r">Pts</th><th>Last Place</th>
+        <th class="r">Pts</th><th>Runner-Up</th><th class="r">Pts</th><th>Last Place</th><th class="r">Pts</th>
       </tr></thead>
       <tbody>${champRows}</tbody>
     </table>`;
