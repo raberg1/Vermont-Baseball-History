@@ -401,6 +401,9 @@
         <td class="r">${fmtN(sm.ruPts)}</td>
         <td>${sm.last || '—'}</td>
         <td class="r">${fmtN(sm.lastPts)}</td>
+        <td class="r">${fmtN(sm.avg)}</td>
+        <td class="r">${sm.aHit != null ? fmtN(sm.aHit) : '—'}</td>
+        <td class="r">${sm.aPit != null ? fmtN(sm.aPit) : '—'}</td>
       </tr>`;
     }).join('');
 
@@ -408,6 +411,7 @@
       <thead><tr>
         <th>Year</th><th>League</th><th>Champion</th><th>Owner</th>
         <th class="r">Pts</th><th>Runner-Up</th><th class="r">Pts</th><th>Last Place</th><th class="r">Pts</th>
+        <th class="r">Avg FP/Team</th><th class="r">Avg Hit/Team</th><th class="r">Avg Pit/Team</th>
       </tr></thead>
       <tbody>${champRows}</tbody>
     </table>`;
