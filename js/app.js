@@ -30,6 +30,39 @@
     return `<span class="fw-bold">${rank}</span>`;
   }
 
+  /** Make every <th> in a table a clickable sort trigger */
+  function makeSortable(table) {
+    const headers = [...table.querySelectorAll('thead th')];
+    let sortCol = -1, sortAsc = true;
+
+    headers.forEach((th, colIdx) => {
+      th.classList.add('sortable');
+      th.addEventListener('click', () => {
+        sortAsc = (sortCol === colIdx) ? !sortAsc : true;
+        sortCol = colIdx;
+
+        headers.forEach((h, i) => {
+          h.classList.remove('sort-asc', 'sort-desc');
+          if (i === colIdx) h.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
+        });
+
+        const tbody = table.querySelector('tbody');
+        [...tbody.querySelectorAll('tr')].sort((a, b) => {
+          const aCell = a.cells[colIdx];
+          const bCell = b.cells[colIdx];
+          const aRaw = aCell?.dataset.val ?? aCell?.textContent.trim() ?? '';
+          const bRaw = bCell?.dataset.val ?? bCell?.textContent.trim() ?? '';
+          const aNum = parseFloat(String(aRaw).replace(/,/g, ''));
+          const bNum = parseFloat(String(bRaw).replace(/,/g, ''));
+          const cmp  = (!isNaN(aNum) && !isNaN(bNum))
+            ? aNum - bNum
+            : String(aRaw).localeCompare(String(bRaw));
+          return sortAsc ? cmp : -cmp;
+        }).forEach(r => tbody.appendChild(r));
+      });
+    });
+  }
+
   /** Row CSS class for top-3 ranks */
   function rkClass(rank) {
     if (rank === 1) return 'rk-1';
@@ -241,7 +274,7 @@
         return `<td class="r ${cls}">${fmtN(v)}</td>`;
       }).join('');
       return `<tr class="${rkClass(rank)}">
-        <td>${medal(rank)}</td>
+        <td data-val="${rank}">${medal(rank)}</td>
         <td class="fw-bold">${r.Team}</td>
         <td class="r fw-bold">${fmtN(r.FPts)}</td>
         ${cells}
@@ -253,9 +286,13 @@
 
   function renderHittingPts(s) {
     $('hitting-pts-table').innerHTML = buildBreakdownTable(s.hittingPts, HIT_COLS);
+    const t = $('hitting-pts-table').querySelector('table');
+    if (t) makeSortable(t);
   }
   function renderPitchingPts(s) {
     $('pitching-pts-table').innerHTML = buildBreakdownTable(s.pitchingPts, PIT_COLS);
+    const t = $('pitching-pts-table').querySelector('table');
+    if (t) makeSortable(t);
   }
 
   // ── Inline Tab Switcher ──────────────────────────────────────────────────
@@ -368,6 +405,7 @@
       </tr></thead>
       <tbody>${champRows}</tbody>
     </table>`;
+    makeSortable($('champions-table').querySelector('table'));
 
     // ── Charts
     renderHistoryCharts(summaries);
@@ -552,7 +590,7 @@
       <tr class="${rkClass(r.rank)}">
         <td>${r.year}</td>
         <td>${r.team}</td>
-        <td>${medal(r.rank)}</td>
+        <td data-val="${r.rank}">${medal(r.rank)}</td>
         <td class="r fw-bold">${fmtN(r.pts)}</td>
         <td class="r">${fmtN(r.hit)}</td>
         <td class="r">${fmtN(r.pit)}</td>
@@ -579,6 +617,8 @@
           </table>
         </div>
       </div>`;
+
+    makeSortable(detail.querySelector('table'));
 
     // Build owner chart
     if (ownerChart) { ownerChart.destroy(); ownerChart = null; }

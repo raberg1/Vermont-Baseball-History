@@ -214,6 +214,10 @@ thead th {
   text-align: left;
 }
 thead th.r { text-align: right; }
+thead th.sortable { cursor: pointer; user-select: none; }
+thead th.sortable:hover { background: var(--navy-light); }
+thead th.sort-asc::after  { content: ' ↑'; opacity: .65; font-size: .85em; }
+thead th.sort-desc::after { content: ' ↓'; opacity: .65; font-size: .85em; }
 tbody td {
   padding: 10px 14px;
   border-bottom: 1px solid var(--border);
