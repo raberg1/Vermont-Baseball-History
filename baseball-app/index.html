@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vermont Baseball League</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ Navigation ═══ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <span class="brand-icon">⚾</span>
+      Vermont Baseball League
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-page="season">
+        <span>📊</span><span>Season</span>
+      </button>
+      <button class="nav-tab" data-page="history">
+        <span>📈</span><span>History</span>
+      </button>
+      <button class="nav-tab" data-page="owners">
+        <span>👤</span><span>Owners</span>
+      </button>
+      <button class="nav-tab" data-page="upload">
+        <span>➕</span><span>Add Season</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════ Main ═══════════ -->
+<main class="main">
+
+  <!-- ─────────────────────────── SEASON PAGE ─── -->
+  <section class="page active" id="page-season">
+
+    <!-- Hero banner -->
+    <div id="season-hero"></div>
+
+    <!-- Year selector -->
+    <div class="year-bar">
+      <button class="year-arrow" id="btn-prev" title="Previous year">&#8592;</button>
+      <select class="year-select" id="year-select" aria-label="Select year"></select>
+      <button class="year-arrow" id="btn-next" title="Next year">&#8594;</button>
+    </div>
+
+    <!-- Overall standings -->
+    <div class="card">
+      <div class="section-header">
+        <div class="section-title">Final Standings</div>
+      </div>
+      <div class="table-wrap" id="standings-table"></div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <!-- Hitting / Pitching breakdown tabs -->
+    <div class="card">
+      <div class="inline-tabs">
+        <button class="inline-tab active" data-tab="hitting">Hitting Breakdown</button>
+        <button class="inline-tab" data-tab="pitching">Pitching Breakdown</button>
+      </div>
+      <div class="tab-panel active" data-panel="hitting">
+        <div class="table-wrap" id="hitting-pts-table"></div>
+      </div>
+      <div class="tab-panel" data-panel="pitching">
+        <div class="table-wrap" id="pitching-pts-table"></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ─────────────────────────── HISTORY PAGE ─── -->
+  <section class="page" id="page-history">
+
+    <!-- Summary stat cards -->
+    <div class="stats-cards" id="history-cards"></div>
+
+    <!-- Champions table (full width) -->
+    <div class="card span-2" style="margin-bottom:0">
+      <div class="section-title" style="margin-bottom:14px">Season Champions</div>
+      <div class="table-wrap" id="champions-table"></div>
+    </div>
+
+    <!-- Charts grid -->
+    <div class="history-grid">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:10px">League Average &amp; Champion Score by Year</div>
+        <div class="chart-wrap">
+          <canvas id="chart-avg-pts"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title" style="margin-bottom:10px">Avg Hitting vs Pitching by Year</div>
+        <div class="chart-wrap">
+          <canvas id="chart-hit-pit"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ─────────────────────────── OWNERS PAGE ─── -->
+  <section class="page" id="page-owners">
+
+    <div class="owners-layout">
+
+      <!-- Left: owner list -->
+      <div class="owner-list-wrap">
+        <div class="section-title">All Owners</div>
+        <div class="spacer-sm"></div>
+        <div class="owner-list" id="owner-list"></div>
+      </div>
+
+      <!-- Right: selected owner detail -->
+      <div id="owner-detail">
+        <div class="card empty-state">Select an owner to view their career stats.</div>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ─────────────────────────── UPLOAD PAGE ─── -->
+  <section class="page" id="page-upload">
+    <div class="upload-wrap">
+
+      <h2 style="margin-bottom:6px">Add a New Season</h2>
+      <p class="text-muted" style="margin-bottom:24px;font-size:.9rem">
+        Upload a Fantrax standings CSV to preview it immediately. To permanently save the data,
+        run <code style="background:rgba(0,0,0,.06);padding:1px 6px;border-radius:4px">process_data.py</code>
+        and push to GitHub.
+      </p>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="section-title" style="margin-bottom:14px">Upload Standings CSV</div>
+
+        <label style="font-size:.875rem;font-weight:600;display:block;margin-bottom:6px">Season Year</label>
+        <input type="number" id="upload-year"
+               style="border:1px solid var(--border);border-radius:6px;padding:8px 12px;width:130px;font-size:1rem;color:var(--text)"
+               min="2000" max="2200" value="2026" />
+
+        <div class="spacer"></div>
+
+        <div class="upload-drop" id="upload-box">
+          <div class="upload-drop-icon">📂</div>
+          <div class="upload-drop-title">Drop your CSV file here</div>
+          <div class="upload-drop-sub">or click the button below to browse</div>
+          <input type="file" id="file-input" accept=".csv" style="display:none" />
+          <button class="btn-upload" id="upload-btn">Choose File</button>
+        </div>
+
+        <div class="upload-result" id="upload-result"></div>
+      </div>
+
+      <div class="instructions">
+        <div class="section-title">How to permanently add seasons</div>
+        <ol>
+          <li>Download the Fantrax final standings CSV for the new season</li>
+          <li>Place it in the <strong>League Summary</strong> folder (same folder as the other CSVs)</li>
+          <li>Add a line to <code>YEAR_FILES</code> in <code>process_data.py</code></li>
+          <li>Run <code>python3 process_data.py</code> from the <code>baseball-app</code> folder</li>
+          <li>Commit and push all changes to GitHub — the site updates automatically</li>
+        </ol>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- ═══════════════════════════════════════ Scripts ══════ -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
