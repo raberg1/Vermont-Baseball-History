@@ -1,6 +1,6 @@
 # Vermont Baseball League — History & Stats
 
-A static web app displaying historical standings, stats, and owner records for the Vermont Baseball League fantasy baseball league (formerly Montana State, 2011–2012).
+A static web app displaying historical standings, stats, and owner records for the Vermont Baseball League fantasy baseball league (formerly Montana State, 2011–2012, and pre-Fantrax Classic Era, 2001–2010).
 
 Live site: **https://raberg1.github.io/Vermont-Baseball-History**
 
@@ -14,17 +14,29 @@ css/styles.css      Stylesheet
 js/app.js           All app logic
 js/data.js          Generated data file — do not edit directly
 process_data.py     Script that generates data.js from the CSV files
-data/               Fantrax standings CSVs + owners spreadsheet
+data/               Fantrax standings CSVs, historical Excel file, and owners spreadsheet
 ```
 
 ---
 
 ## Pages
 
-- **Season** — Final standings, hitting breakdown, and pitching breakdown for any year
-- **History** — League champions, all-time records, and year-over-year charts
-- **Owners** — Career stats for every owner: wins, average finish, points per season
-- **Add Season** — Upload a new Fantrax CSV to preview it in the browser immediately
+- **Season** — Final standings with league average, hitting breakdown, and pitching breakdown for any year. All tables are sortable by clicking column headers.
+- **History** — League champions table (with avg FP/team, avg hitting, avg pitching per year), all-time records, and year-over-year charts.
+- **Owners** — All-time owner summary table (sortable, with current-owners toggle), plus individual career stats, charts, and year-by-year breakdowns for each owner.
+- **Add Season** — Upload a new Fantrax CSV to preview it in the browser immediately.
+
+---
+
+## Data coverage
+
+| Era | Years | Source |
+|-----|-------|--------|
+| Classic Era | 2001–2010 | `data/fantasybaseballstats_1999-2021.xlsx` |
+| Montana State (Fantrax) | 2011–2012 | Fantrax standings CSVs |
+| Vermont Baseball (Fantrax) | 2013–2025 | Fantrax standings CSVs |
+
+Pre-2011 hitting/pitching splits are estimated from FP/G × game counts (derived from 2009 actuals); all other years use exact totals from Fantrax.
 
 ---
 
@@ -51,10 +63,16 @@ data/               Fantrax standings CSVs + owners spreadsheet
 
 ## Data sources
 
-- **Standings CSVs** — exported from [Fantrax](https://www.fantrax.com) at end of each season
-- **Owners file** — `data/League Owners By Year - Sheet1.csv` maps owner names to their team names by year
+- **Fantrax standings CSVs** — exported from [Fantrax](https://www.fantrax.com) at end of each season (2011–present)
+- **Historical Excel file** — `data/fantasybaseballstats_1999-2021.xlsx` covers pre-Fantrax seasons (2001–2010)
+- **Owners file** — `data/League Owners By Year - Sheet1.csv` maps Fantrax usernames/profiles to owner display names
 
-The Python script (`process_data.py`) parses all CSVs and writes `js/data.js`, which the app loads at startup. The site is fully static — no server or database required.
+The Python script (`process_data.py`) parses all sources and writes `js/data.js`, which the app loads at startup. The site is fully static — no server or database required.
+
+**Dependencies:** `openpyxl` is required to parse the historical Excel file:
+```bash
+pip3 install openpyxl
+```
 
 ---
 
@@ -66,7 +84,7 @@ Open `index.html` directly in a browser. To regenerate data after changing a CSV
 python3 process_data.py
 ```
 
-No npm, no build tools, no dependencies beyond Python 3 (standard library only) and Chart.js (loaded from CDN).
+No npm, no build tools. Chart.js is loaded from CDN.
 
 ---
 
