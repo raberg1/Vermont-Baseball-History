@@ -72,7 +72,7 @@ USERNAME_TO_NAME = {
     "desilvajerry":   "Jerry DeSilva",
     "ejohnson523":    "Erik Johnson",
     "csuram89":       "csuram89",
-    "elaguamala":     "elaguamala",
+    "elaguamala":     "Daniel Caveney",
 }
 
 # Columns parsed as numbers
