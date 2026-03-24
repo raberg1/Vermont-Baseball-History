@@ -466,7 +466,12 @@
         const bestRk= ranks.length ? Math.min(...ranks) : null;
         const totalPts = records.reduce((sum, r) => sum + (r.pts || 0), 0);
 
-        return { name, years, records, wins, avgRk, bestRk, totalPts };
+        const hitRecs = records.filter(r => r.hit != null);
+        const pitRecs = records.filter(r => r.pit != null);
+        const avgHit = hitRecs.length ? hitRecs.reduce((s, r) => s + r.hit, 0) / hitRecs.length : null;
+        const avgPit = pitRecs.length ? pitRecs.reduce((s, r) => s + r.pit, 0) / pitRecs.length : null;
+
+        return { name, years, records, wins, avgRk, bestRk, totalPts, avgHit, avgPit };
       })
       .sort((a, b) => {
         if (b.wins !== a.wins) return b.wins - a.wins;
@@ -530,6 +535,14 @@
         <div class="card">
           <div class="card-title">Best Finish</div>
           <div class="card-value">${o.bestRk || '—'}</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Avg Hitting Pts</div>
+          <div class="card-value">${o.avgHit ? fmtN(o.avgHit) : '—'}</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Avg Pitching Pts</div>
+          <div class="card-value">${o.avgPit ? fmtN(o.avgPit) : '—'}</div>
         </div>
       </div>`;
 
