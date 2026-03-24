@@ -511,13 +511,50 @@
         const avgHit = hitRecs.length ? hitRecs.reduce((s, r) => s + r.hit, 0) / hitRecs.length : null;
         const avgPit = pitRecs.length ? pitRecs.reduce((s, r) => s + r.pit, 0) / pitRecs.length : null;
 
-        return { name, years, records, wins, avgRk, bestRk, totalPts, avgHit, avgPit };
+        // Averages excluding the shortened 2020 season
+        const no2020      = records.filter(r => r.year !== 2020);
+        const ranks2020   = no2020.map(r => r.rank).filter(Boolean);
+        const avgRkNo2020 = ranks2020.length ? ranks2020.reduce((a, b) => a + b) / ranks2020.length : null;
+        const ptsNo2020   = no2020.filter(r => r.pts != null);
+        const avgPtsNo2020= ptsNo2020.length ? ptsNo2020.reduce((s, r) => s + r.pts, 0) / ptsNo2020.length : null;
+        const hitNo2020   = no2020.filter(r => r.hit != null);
+        const avgHitNo2020= hitNo2020.length ? hitNo2020.reduce((s, r) => s + r.hit, 0) / hitNo2020.length : null;
+        const pitNo2020   = no2020.filter(r => r.pit != null);
+        const avgPitNo2020= pitNo2020.length ? pitNo2020.reduce((s, r) => s + r.pit, 0) / pitNo2020.length : null;
+
+        return { name, years, records, wins, avgRk, bestRk, totalPts, avgHit, avgPit,
+                 avgRkNo2020, avgPtsNo2020, avgHitNo2020, avgPitNo2020 };
       })
       .sort((a, b) => {
         if (b.wins !== a.wins) return b.wins - a.wins;
         if (a.avgRk !== b.avgRk) return (a.avgRk || 99) - (b.avgRk || 99);
         return a.name.localeCompare(b.name);
       });
+  }
+
+  function renderOwnerSummaryTable(summaries) {
+    const thead = `<thead><tr>
+      <th>Owner</th>
+      <th class="r">Seasons</th>
+      <th class="r">Titles</th>
+      <th class="r">Avg Rank</th>
+      <th class="r">Avg Pts</th>
+      <th class="r">Avg Hitting</th>
+      <th class="r">Avg Pitching</th>
+    </tr></thead>`;
+
+    const tbody = summaries.map(o => `<tr>
+      <td class="fw-bold">${o.name}</td>
+      <td class="r">${o.records.length}</td>
+      <td class="r">${o.wins > 0 ? `<span style="color:var(--gold);font-weight:700">${o.wins} 🏆</span>` : '—'}</td>
+      <td class="r">${o.avgRkNo2020 ? o.avgRkNo2020.toFixed(1) : '—'}</td>
+      <td class="r">${o.avgPtsNo2020 ? fmtN(o.avgPtsNo2020) : '—'}</td>
+      <td class="r">${o.avgHitNo2020 ? fmtN(o.avgHitNo2020) : '—'}</td>
+      <td class="r">${o.avgPitNo2020 ? fmtN(o.avgPitNo2020) : '—'}</td>
+    </tr>`).join('');
+
+    $('owner-summary-table').innerHTML = `<table>${thead}<tbody>${tbody}</tbody></table>`;
+    makeSortable($('owner-summary-table').querySelector('table'));
   }
 
   function renderOwners() {
@@ -536,6 +573,8 @@
         ${o.wins > 0 ? `<div class="wins-badge">${o.wins} 🏆</div>` : ''}
       </div>
     `).join('');
+
+    renderOwnerSummaryTable(ownerSummaries);
 
     if (ownerSummaries.length > 0) {
       selectOwner(encodeURIComponent(ownerSummaries[0].name));
