@@ -83,7 +83,7 @@ USERNAME_TO_NAME = {
 # Normalize owner names from the historical Excel spreadsheet
 HISTORICAL_OWNER_NAMES = {
     "Robb Cramer":          "Robert Cramer Jr",
-    "Bobb Cramer":          "Robert Cramer Jr",
+    "Bobb Cramer":          "Bob Cramer",
     "Robert Cramer":        "Robert Cramer Jr",
     "Rob Berg":             "Robert Berg",
     "Rob berg":             "Robert Berg",
